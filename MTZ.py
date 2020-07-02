@@ -1,5 +1,6 @@
 from docplex.mp.model import Model
 from time import time
+import csv
 # ### Miller Tucker Zemlin Constraints
 #
 # \begin{align}
@@ -83,15 +84,11 @@ class Miller_Tucker_Zemlin_Model:
 
     def write_info(self, time, res):
         density = int(len(self.E)*2/(len(self.V)*len(self.V)-1)*100)
-        filename = "../results/MTZ_"+str(len(self.V))+"_"+str(density)+".txt"
-        with open(filename, 'a') as f:
-            f.write(str(len(self.V))+" "+str(len(self.E))+"\n")
-            f.write("Time: "+str(time)+" milliseconds")
-            f.write("\nObjective value: "+str(self.model.objective_value)+"\n")
-            f.write(str(self.model.get_statistics()))
-            f.write("\n---------------------------------\n\n")
-            #f.write("\n\n"+self.model.export_model())
-        f.close()
+        filename = "../results/MTZ_"+str(len(self.V))+"_"+str(density)+".csv"
+        with open(filename, 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
+        csvfile.close()
 
 
 def Miller_Tucker_Zemlin(V,E,A, status=True):

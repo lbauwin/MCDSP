@@ -166,7 +166,7 @@ def main():
     #MDC_opti(V,E,A)
     status = False
     print("Solving SSL...")
-    SSL_opti(V,E,A, status)
+    #SSL_opti(V,E,A, status)
     SSL_lazy_opti(V,E,A,status)
     print("Solving MTZ...")
     MTZ_opti(V,E,A,status)

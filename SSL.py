@@ -1,6 +1,7 @@
 from docplex.mp.model import Model
 import numpy as np
 from time import time
+import csv
 # ## Simonetti - Salles Da Cunha - Lucena Constraints model
 # \begin{equation}
 # \min \sum_{i \in V} x_i
@@ -125,18 +126,11 @@ class Simonetti_SallesDaCunha_Lucena_Model:
 
     def write_info(self, time, res):
         density = int(len(self.E)*2/(len(self.V)*len(self.V)-1)*100)
-        filename = "../results/SSL_"+str(len(self.V))+"_"+str(density)+".txt"
-        with open(filename, 'a') as f:
-            f.write(str(len(self.V))+" "+str(len(self.E))+"\n")
-            f.write("Time: "+str(time)+" milliseconds with "+str(self.iteration)+" iterations")
-            if res!=None:
-                f.write("\nObjective value: "+str(self.model.objective_value)+"\n")
-            else:
-                f.write("\nObjective value: "+str(self.model.objective_value)+"\n")
-                f.write("\nNo solution because too much iteration\n")
-            f.write(str(self.model.get_statistics()))
-            f.write("\n---------------------------------\n\n")
-        f.close()
+        filename = "../results/SSL_"+str(len(self.V))+"_"+str(density)+".csv"
+        with open(filename, 'a') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
+        csvfile.close()
 
 
 def exist_path(graph, start, end):
