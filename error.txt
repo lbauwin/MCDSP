@@ -1,0 +1,28 @@
+V = [1:16]
+E = [(11, 9), (10, 4), (9, 10), (1, 6), (14, 4), (11, 12), (10, 11), (11, 6), (8, 7), (1, 5), (13, 14), (8, 15), (9, 12), (2, 11), (7, 3), (3, 16), (13, 2), (4, 11), (6, 9), (15, 2), (14, 11), (9, 13), (15, 9), (9, 14)]
+
+Le cycle détecté dans la solution intermédiaire:
+[2, 11, 6, 9, 15]
+
+Les contraintes ajoutées comme lazy constraints et qui doivent encore être vérifiées:
+[docplex.mp.LinearConstraint[](y_11_6+y_2_11+y_6_9+y_15_2+y_15_9,LE,x_6+x_9+x_11+x_15),
+ docplex.mp.LinearConstraint[](y_11_6+y_2_11+y_6_9+y_15_2+y_15_9,LE,x_2+x_6+x_9+x_15),
+ docplex.mp.LinearConstraint[](y_11_6+y_2_11+y_6_9+y_15_2+y_15_9,LE,x_2+x_9+x_11+x_15),
+ docplex.mp.LinearConstraint[](y_11_6+y_2_11+y_6_9+y_15_2+y_15_9,LE,x_2+x_6+x_11+x_15),
+ docplex.mp.LinearConstraint[](y_11_6+y_2_11+y_6_9+y_15_2+y_15_9,LE,x_2+x_6+x_9+x_11)]
+
+La solution sur laquelle les contraintes sont testées:
+x_1=1	x_2=1	x_3=1	x_4=-0	x_5=0	x_6=1	x_7=-0	x_8=0	
+x_9=1	x_10=-0	x_11=1	x_12=-0	x_13=0	x_14=0	x_15=1	x_16=-0
+
+y_11_9=-0	y_10_4=0	y_9_10=0	y_1_6=1	
+y_14_4=0	y_11_12=0	y_10_11=-0	y_11_6=1	
+y_8_7=-0	y_1_5=-0	y_13_14=0	y_8_15=-0
+y_9_12=0	y_2_11=1	y_7_3=0		y_3_16=-0
+y_13_2=0	y_4_11=0	y_6_9=1		y_15_2=1
+y_14_11=-0	y_9_13=-0	y_15_9=1	y_9_14=-0
+
+La solution retournée qui contient le cycle 
+[1, 2, 3, 6, 9, 11, 15]
+[(1, 6), (11, 6), (2, 11), (6, 9), (15, 2), (15, 9)]
+
