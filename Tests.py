@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from docplex.mp.model import Model
-#from Formulations import *
+from Formulations import *
 from SSL import *
 from SSL_lazy import *
 from Martin import *
@@ -13,18 +13,40 @@ import sys
 
 # Parameter for figure
 rnd = np.random
-rnd.seed(3)
+#rnd.seed(3)
 loc_x = 0
 loc_y = 0
 
+
+
 # Fuctions to define graphs
 def random_graph(v,e):
-    E = []
-    for i in range(e):
+    #First edges to assure graph is connected
+    initialSet = []
+    visitedSet = []
+    edges =[]
+    vertices = []
+    for i in range(v):
+        initialSet.append(i+1)
+        vertices.append(i+1)
+    curVertex = rnd.choice(initialSet)
+    initialSet.remove(curVertex)
+    visitedSet.append(curVertex)
+    edgeCnt = 0
+    while initialSet:
+        adjVertex = rnd.choice(initialSet)
+        edge = (curVertex, adjVertex)
+        edges.append(edge)
+        edgeCnt+=1
+        initialSet.remove(adjVertex)
+        visitedSet.append(adjVertex)
+        curVertex=adjVertex
+    #Second add all other edges randomly
+    while edgeCnt < e:
         node1 = rnd.randint(1,v+1)
         node2 = rnd.randint(1,v+1)
         iteration = 0
-        while (node1 == node2 or (node1,node2) in E or (node2,node1) in E): #If same random number
+        while (node1 == node2 or (node1,node2) in edges or (node2,node1) in edges): #If same random number
             node2 += 1
             if (node2 == v+1 ):
                 node2 = 1
@@ -34,12 +56,13 @@ def random_graph(v,e):
                     node1 = 1
                 iteration = 0
             iteration+=1
-        E.append((node1,node2))
+        edges.append((node1,node2))
+        edgeCnt+=1
+    return edges
 
-    for i in range(v):
-        if not(any(i+1 in j for j in E)):
-            E.append((i+1, rnd.randint(1,v+1)))
-    return E
+#ex pour erreur SSL_lazy |V|=16
+#E = [(11, 9), (10, 4), (9, 10), (1, 6), (14, 4), (11, 12), (10, 11), (11, 6), (8, 7), (1, 5), (13, 14), (8, 15), (9, 12), (2, 11), (7, 3), (3, 16), (13, 2), (4, 11), (6, 9), (15, 2), (14, 11), (9, 13), (15, 9), (9, 14)]
+
 
 def IEEE_14_Bus_graph():
     return [(1,2),(1,5),(2,3),(2,4),(2,5),(3,4),(4,5),(4,7),(4,9),(5,6),(6,11),(6,12),(6,13),(7,8),(7,9),
@@ -79,16 +102,16 @@ def show_optimization_graph(title, active_vertices,active_edges, V, E):
 
 # Calling solver funtions
 def SSL_opti(V,E,A,status=True):
-    solution, active_vertices, active_edges = Simonetti_SallesDaCunha_Lucena(V,E,A, status)
+    solution = Simonetti_SallesDaCunha_Lucena(V,E,A, status)
     title = "Simonetti-Salles Da Cunha-Lucena Constraints"
     #show_optimization_graph(title, active_vertices, active_edges, V, E)
 def SSL_lazy_opti(V,E,A,status=True):
-    solution, active_vertices, active_edges = Simonetti_SallesDaCunha_Lucena_Lazy(V,E,A, status)
-    title = "Simonetti-Salles Da Cunha-Lucena Constraints"
+    solution= Simonetti_SallesDaCunha_Lucena_Lazy(V,E,A, status)
+    title = "Simonetti-Salles Da Cunha-Lucena Lazy Constraints"
     #show_optimization_graph(title, active_vertices, active_edges, V, E)
 
 def Martin_opti(V,E,A,status=True):
-    solution, active_vertices, active_edges = Martin(V,E,A, status)
+    solution = Martin(V,E,A, status)
     title = "Martin Constraints"
     #show_optimization_graph(title, active_vertices, active_edges, V, E)
 
@@ -100,12 +123,12 @@ def MDC_opti(V,E,A,status=True):
 
 
 def SCF_opti(V,E,A,status = True):
-    solution, active_vertices, active_edges = Single_Commodity_Flow(V,E,A, status)
+    solution = Single_Commodity_Flow(V,E,A, status)
     title = "Single Commodity Flow Constraints"
     #show_optimization_graph(title, active_vertices, active_edges, V, E)
 
 def MTZ_opti(V,E,A,status = True):
-    solution, active_vertices, active_edges = Miller_Tucker_Zemlin(V,E,A, status)
+    solution = Miller_Tucker_Zemlin(V,E,A, status)
     title = "Miller Tucker Zemlin"
     #show_optimization_graph(title, active_vertices, active_edges, V, E)
 
@@ -133,7 +156,7 @@ def main():
     E = [] # Set of vertices
     if name=="random":
         v = int(sys.argv[2]) # Number of nodes
-        e = int(int(sys.argv[3])*v/2) # Formula to get average degree
+        e = int(float(sys.argv[3])*v/2) # Formula to get average degree
         E = random_graph(v,e)
 
     elif name == "IEEE-14-Bus":
@@ -156,25 +179,30 @@ def main():
                 A[i].append(1)
             else:
                 A[i].append(0)
-
     global loc_x
     global loc_y
     loc_x = rnd.rand(len(V))*300
     loc_y = rnd.rand(len(V))*200
-
+    #orig_stdout = sys.stdout
+    #filename = 'out_'+name+"_"+str(v)+"_"+str(len(E))+'.txt'
+    #f = open(filename, 'a')
+    #sys.stdout = f
     # start solver
-    #MDC_opti(V,E,A)
-    status = False
-    print("Solving SSL...")
-    #SSL_opti(V,E,A, status)
-    SSL_lazy_opti(V,E,A,status)
-    print("Solving MTZ...")
+    status = True
+    #MDC_opti(V,E,A, status)
+    print("\n\nSolving MTZ...")
     MTZ_opti(V,E,A,status)
-    #print("Solving SCF...")
-    #SCF_opti(V,E,A, status)
-    #print("Solving Martin...")
-    #Martin_opti(V,E,A,status) #Working ! :D except if disconnected node
+    print("\n\nSolving SSL...")
+    SSL_opti(V,E,A, status)
+    SSL_lazy_opti(V,E,A,status)
 
+    print("\n\nSolving SCF...")
+    SCF_opti(V,E,A, status)
+    print("\n\nSolving Martin...")
+    Martin_opti(V,E,A,status) #Working ! :D except if disconnected node
+    #print("\n\n----------------------------------------------------\n\n")
+    #sys.stdout = orig_stdout
+    #f.close()
     #print(E)
     #print(len(E))
 

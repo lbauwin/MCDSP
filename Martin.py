@@ -78,7 +78,7 @@ class Martin_Model:
     def solve_model(self):
         print("Martin")
         self.model.parameters.timelimit = 3600
-        #self.model.parameters.mip.tolerances.mipgap = 0.5
+        self.model.parameters.mip.tolerances.mipgap = 0.05
         start = time()*1000
         res = self.model.solve(clean_before_solve=True, log_output=self.status)
         end = time()*1000
@@ -92,7 +92,7 @@ class Martin_Model:
         filename = "../results/Martin_"+str(len(self.V))+"_"+str(density)+".csv"
         with open(filename, 'a') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
+            writer.writerow(['Martin', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
         csvfile.close()
 
 

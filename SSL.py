@@ -111,7 +111,7 @@ class Simonetti_SallesDaCunha_Lucena_Model:
             print("Iteration",self.iteration)
             #self.model.print_information()
             self.model.parameters.timelimit = 3600 #No more than an hour
-            #self.model.parameters.mip.tolerances.mipgap = 0.5
+            self.model.parameters.mip.tolerances.mipgap = 0.05
             res = self.model.solve(clean_before_solve=True, log_output=self.status)
 
             found_optimal=self._update_constraints()
@@ -129,7 +129,7 @@ class Simonetti_SallesDaCunha_Lucena_Model:
         filename = "../results/SSL_"+str(len(self.V))+"_"+str(density)+".csv"
         with open(filename, 'a') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
+            writer.writerow(['SSL', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
         csvfile.close()
 
 

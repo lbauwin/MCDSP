@@ -69,10 +69,13 @@ class Miller_Tucker_Zemlin_Model:
     def solve_model(self):
         print("MTZ")
         self.model.parameters.timelimit = 3600
-        #self.model.parameters.mip.tolerances.mipgap = 0.5
+        self.model.parameters.mip.tolerances.mipgap = 0.05
         start = time()*1000
         res = self.model.solve(clean_before_solve=True, log_output=self.status)
         end = time()*1000
+        if res == None:
+            print('infeasible')
+            return
         #self.model.print_information()
         print(self.model.objective_value)
 
@@ -87,7 +90,7 @@ class Miller_Tucker_Zemlin_Model:
         filename = "../results/MTZ_"+str(len(self.V))+"_"+str(density)+".csv"
         with open(filename, 'a') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
+            writer.writerow(['MTZ', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
         csvfile.close()
 
 

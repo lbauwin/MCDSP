@@ -16,8 +16,9 @@ def MDS(V,E,A, status=True):
     mdl.add_constraints(mdl.sum(A[i-1][j-1]*x[j] for j in V)>=1 for i in V)
     try:
         solution = mdl.solve(log_output=status)
-        print(solution.solve_status)
-        print(solution)
+        #print(solution.solve_status)
+        #print(solution)
+        print(mdl.objective_value)
         active_vertices = [i for i in V if x[i].solution_value>0.9]
         density = int(len(E)*2/(len(V)*len(V)-1)*100)
         filename = "../results/MDS_"+str(len(V))+"_"+str(density)+".txt"

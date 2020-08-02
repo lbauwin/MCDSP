@@ -26,23 +26,19 @@ class DOLazyCallback(ConstraintCallbackMixin, LazyConstraintCallback):
         ConstraintCallbackMixin.__init__(self)
         self.nb_lazy_cts = 0
 
-    def add_lazy_constraints(self, cts):
-        self.register_constraints(cts)
 
     @print_called('--> lazy constraint callback called: #{0}')
     def __call__(self):
         # fetch variable values into a solution
-        sol = self.make_solution()
+        #sol = self.make_solution()
         sol_x = self.make_solution_from_vars(self.x.values())
         sol_y = self.make_solution_from_vars(self.y.values())
-        # for each lazy constraint, check whether it is verified,
-        #unsats = self.get_cpx_unsatisfied_cts(self.cts, sol, tolerance=1e-6)
-        #for ct, cpx_lhs, sense, cpx_rhs in unsats:
-        #    self.add(cpx_lhs, sense, cpx_rhs)
-        #    self.nb_lazy_cts += 1
-        #    print('  -- new lazy constraint[{0}]: {1!s}'.format(self.nb_lazy_cts, ct))
+        #print(sol_y)
+        #print(sol_x)
+
         self.active_vertices = [i for i in self.V if sol_x['x_'+str(i)]>0.9]
         self.active_edges = [(i,j) for i,j in self.E if sol_y['y_'+str(i)+"_"+str(j)]>0.9]
+
         graph = {}
         for i in self.active_vertices:
             graph[i]=[]
@@ -54,8 +50,8 @@ class DOLazyCallback(ConstraintCallbackMixin, LazyConstraintCallback):
         connected = np.zeros(len(self.active_vertices))
         i = self.active_vertices[0]
         connected[0] = 1
+        #print("DEBUG", self.active_vertices, self.active_edges)
         for j in range(1,len(self.active_vertices)):
-            #for j in range(len(self.active_vertices)):
             #If exist a path from i to j
             if exist_path(graph, i, self.active_vertices[j]):
                 connected[j] = 1
@@ -74,34 +70,24 @@ class DOLazyCallback(ConstraintCallbackMixin, LazyConstraintCallback):
                 if node in graph[key]:
                     graph[key].remove(node)
         #else: add constraints to the model and return false
-        #self.add_lazy_constraints(self.model.sum(self.y[i,k] for (i,k) in self.E
-        #        if i in self.active_vertices and k in self.active_vertices)<=
-        #        self.model.sum(self.x[i] for i in self.active_vertices if i!=j)
-        #        for j in self.active_vertices)
         if len(cycles)>0:
             for cycle in cycles:
                 cycle.pop()
-                print(cycle)
-                self.add_lazy_constraints(self.model.sum(self.y[i,k] for (i,k) in self.active_edges
+                self.register_constraints(self.model.sum(self.y[i,k] for (i,k) in self.active_edges
                 if i in cycle and k in cycle)<=self.model.sum(self.x[i] for i in cycle if i!=j)
                 for j in cycle)
-
-        unsats = self.get_cpx_unsatisfied_cts(self.cts, sol, tolerance=0)
-        for ct, cpx_lhs, sense, cpx_rhs in unsats:
+        #print(self.cts)
+        #unsats = self.get_cpx_unsatisfied_cts(self.cts, sol, tolerance=0.05)
+        #for ct, cpx_lhs, sense, cpx_rhs in unsats:
             #print('Add violated subtour')
-            #print(ct)
-            #print((ct,cpx_lhs, sense, cpx_rhs))
+            #self.nb_lazy_cts += 1
+            #print('  -- new lazy constraint[{0}]'.format(self.nb_lazy_cts))
+            #self.add(cpx_lhs, sense, cpx_rhs)
+        #print('  -- new lazy constraint[{0}]'.format(self.nb_lazy_cts))
 
-            self.add(cpx_lhs, sense, cpx_rhs)
-
-        #Non sense in satisfied (ex: 5<=4)
-        #for ct in self.cts:
-        #    if ct.is_satisfied(sol, 0):
-        #        cpx_lhs, cpx_sense, cpx_rhs = self.linear_ct_to_cplex(ct)
-        #        print((ct,cpx_lhs, cpx_sense, cpx_rhs))
-        #for ct in self.cts:
-        #    cpx_lhs, cpx_sense, cpx_rhs = self.linear_ct_to_cplex(ct)
-        #    self.add(cpx_lhs, cpx_sense, cpx_rhs)
+        for ct in self.cts:
+            cpx_lhs, cpx_sense, cpx_rhs = self.linear_ct_to_cplex(ct)
+            self.add(cpx_lhs, cpx_sense, cpx_rhs)
 
 class Simonetti_SallesDaCunha_Lucena_Model_Lazy:
     def __init__(self, V,E,A, status=True):
@@ -147,25 +133,30 @@ class Simonetti_SallesDaCunha_Lucena_Model_Lazy:
         lazyct_cb.V = self.V
         lazyct_cb.E = self.E
 
-        #self.model.lazy_callback = lazyct_cb
+        self.model.lazy_callback = lazyct_cb
 
 
     def solve_model(self):
         print("SSL")
         found_optimal = False
         self.iteration = 0
+        self.model.parameters.timelimit = 3600 #No more than an hour
+        self.model.parameters.mip.tolerances.mipgap = 0.05
         start = time()*1000
         self.model.parameters.timelimit = 3600 #No more than an hour
         res = self.model.solve(clean_before_solve=True, log_output=self.status)
         end =  time()*1000
+        if res == None:
+            return
         #self.model.print_information()
         print(self.model.objective_value)
         elapsed = int(round(end-start))
+
         self.write_info(elapsed, res)
         active_vertices = [i for i in self.V if self.x[i].solution_value>0.9]
         active_edges = [(i,j) for i,j in self.E if self.y[i,j].solution_value>0.9]
-        #print(active_vertices)
-        #print(active_edges)
+        print(active_vertices)
+        print(active_edges)
         return res, active_vertices, active_edges
 
     def write_info(self, time, res):
@@ -175,19 +166,7 @@ class Simonetti_SallesDaCunha_Lucena_Model_Lazy:
             writer = csv.writer(csvfile)
             writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
         csvfile.close()
-        """
-        with open(filename, 'a') as f:
-            f.write(str(len(self.V))+" "+str(len(self.E))+"\n")
-            f.write("Time: "+str(time)+" milliseconds")
-            if res!=None:
-                f.write("\nObjective value: "+str(self.model.objective_value)+"\n")
-            else:
-                f.write("\nObjective value: "+str(self.model.objective_value)+"\n")
-                f.write("\nNo solution because too much iteration\n")
-            f.write(str(self.model.get_statistics()))
-            f.write("\n---------------------------------\n\n")
-        f.close()
-        """
+
 
 
 def exist_path(graph, start, end):
