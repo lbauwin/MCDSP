@@ -36,13 +36,13 @@ class Single_Commodity_Flow_Model:
         self.model.minimize(self.model.sum(self.x[i] for i in self.V))
         self.model.add_constraints(self.model.sum(self.A[i-1][j-1]*self.x[j]
                                 for j in self.V)>=1 for i in self.V)
-        #Constraint 4a
+        #Constraint 1.10a
         self.model.add_constraint(self.model.sum(self.r)==1)
-        #Constraint 4b
+        #Constraint 1.10b
         self.model.add_constraints(self.r[i]<=self.x[i] for i in self.V)
-        #Constraint 4c
+        #Constraint 1.10c
         self.model.add_constraints(self.f[i,j]>=0 for i,j in self.edges)
-        #Constraint 4d
+        #Constraint 1.10d
         self.model.add_indicator_constraints(self.model.indicator_constraint(self.x[i],self.f[i,j]
                     <=self.model.sum(self.x[k] for k in self.V),1) for i,j in self.edges)
         self.model.add_indicator_constraints(self.model.indicator_constraint(self.x[i],self.f[i,j]
@@ -51,10 +51,10 @@ class Single_Commodity_Flow_Model:
                     <=self.model.sum(self.x[k] for k in self.V),1) for i,j in self.edges)
         self.model.add_indicator_constraints(self.model.indicator_constraint(self.x[j],self.f[i,j]
                     ==0, 0) for i,j in self.edges)
-        #Constraint 4e
+        #Constraint 1.10e
         self.model.add_constraints(self.model.sum(self.f[j,i] for j in self.V if (j,i) in self.edges)
                     <=len(self.V)*(1-self.r[i]) for i in self.V)
-        #Constraint 4f
+        #Constraint 1.10f
         self.model.add_indicator_constraints(self.model.indicator_constraint(self.r[i],
                     self.model.sum(self.f[j,i] for j in self.V if (j,i) in self.edges)-
                     self.model.sum(self.f[i,j] for j in self.V if (i,j) in self.edges)
@@ -63,7 +63,6 @@ class Single_Commodity_Flow_Model:
                     self.model.sum(self.f[j,i] for j in self.V if (j,i) in self.edges)-
                     self.model.sum(self.f[i,j] for j in self.V if (i,j) in self.edges)
                     ==self.x[i],0) for i in self.V)
-        #Constraint 4g
 
     def solve_model(self):
         print("SCF")
@@ -72,13 +71,14 @@ class Single_Commodity_Flow_Model:
         start = time()*1000
         res = self.model.solve(clean_before_solve=True, log_output=self.status)
         end = time()*1000
-        #self.model.print_information()
-        print(self.model.objective_value)
+        #print(self.model.objective_value)
+
         elapsed = int(round(end-start))
         self.write_info(elapsed, res)
         active_vertices = [i for i in self.V if self.x[i].solution_value>0.9]
         active_edges = [(i,j) for i,j in self.E if self.f[i,j].solution_value>0.9 or self.f[j,i].solution_value>0.9]
         return res, active_vertices, active_edges
+        
     def write_info(self, time, res):
         density = int(len(self.E)*2/(len(self.V)*len(self.V)-1)*100)
         filename = "../results/SCF_"+str(len(self.V))+"_"+str(density)+".csv"

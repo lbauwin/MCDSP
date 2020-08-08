@@ -3,9 +3,7 @@ from docplex.mp.model import Model
 
 # ## Minimum dominating set function
 #
-#
 # \min \sum_{i}^V x_i
-#
 # \sum_j^V a_{ij} x_j >= 1,  \forall i \in V
 
 def MDS(V,E,A, status=True):
@@ -16,8 +14,6 @@ def MDS(V,E,A, status=True):
     mdl.add_constraints(mdl.sum(A[i-1][j-1]*x[j] for j in V)>=1 for i in V)
     try:
         solution = mdl.solve(log_output=status)
-        #print(solution.solve_status)
-        #print(solution)
         print(mdl.objective_value)
         active_vertices = [i for i in V if x[i].solution_value>0.9]
         density = int(len(E)*2/(len(V)*len(V)-1)*100)

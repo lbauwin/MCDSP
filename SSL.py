@@ -35,22 +35,22 @@ class Simonetti_SallesDaCunha_Lucena_Model:
                     self.gamma_i[i].append(j)
     def _build_model(self):
         self.model.minimize(self.model.sum(self.x[i] for i in self.V))
-        # Constraints 1.5
+        # Constraints 1.3a
         self.model.add_constraint(self.model.sum(self.y)==self.model.sum(self.x)-1)
-        # Constraints 1.8
+        # Constraints 1.3d
         self.model.add_constraints(self.y[i,j]>=0 for i,j in self.E)
 
-        # Constraints 1.9
+        # Constraints 1.3e
         self.model.add_constraints(self.x[i]<=1 for i in self.V)
         self.model.add_constraints(self.x[i]>=0 for i in self.V)
 
-        # Constraints 1.10
+        # Constraints 1.4a
         for v in self.V:
             self.model.add_constraint(self.model.sum(self.x[k] for k in self.gamma_i[v])-
                     self.model.sum(self.y[i,j] for i,j in self.E if i in self.gamma_i[v]
                     and j in self.gamma_i[v])>=1)
 
-        # Constraints on edges
+        # Constraints 1.3f
         self.model.add_constraints(self.y[i,j]<=self.x[i] for i,j in self.E)
         self.model.add_constraints(self.y[i,j]<=self.x[j] for i,j in self.E)
 
@@ -70,7 +70,6 @@ class Simonetti_SallesDaCunha_Lucena_Model:
         i = self.active_vertices[0]
         connected[0] = 1
         for j in range(1,len(self.active_vertices)):
-            #for j in range(len(self.active_vertices)):
             #If exist a path from i to j
             if exist_path(graph, i, self.active_vertices[j]):
                 connected[j] = 1
@@ -89,10 +88,6 @@ class Simonetti_SallesDaCunha_Lucena_Model:
                 if node in graph[key]:
                     graph[key].remove(node)
         #else: add constraints to the model and return false
-        #self.model.add_constraints(self.model.sum(self.y[i,k] for (i,k) in self.E
-        #        if i in self.active_vertices and k in self.active_vertices)<=
-        #        self.model.sum(self.x[i] for i in self.active_vertices if i!=j)
-        #        for j in self.active_vertices)
         if len(cycles)>0:
             for cycle in cycles:
                 self.model.add_constraints(self.model.sum(self.y[i,k] for (i,k) in self.E
@@ -109,7 +104,6 @@ class Simonetti_SallesDaCunha_Lucena_Model:
         while not found_optimal:
             self.iteration+=1
             print("Iteration",self.iteration)
-            #self.model.print_information()
             self.model.parameters.timelimit = 3600 #No more than an hour
             self.model.parameters.mip.tolerances.mipgap = 0.05
             res = self.model.solve(clean_before_solve=True, log_output=self.status)
@@ -120,8 +114,7 @@ class Simonetti_SallesDaCunha_Lucena_Model:
         end =  time()*1000
         elapsed = int(round(end-start))
         self.write_info(elapsed, res)
-        #self.model.print_information()
-        print(self.model.objective_value)
+        #print(self.model.objective_value)
         return res, self.active_vertices, self.active_edges
 
     def write_info(self, time, res):

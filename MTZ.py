@@ -43,26 +43,26 @@ class Miller_Tucker_Zemlin_Model:
         self.model.minimize(self.model.sum(self.x[i] for i in self.V))
         self.model.add_constraints(self.model.sum(self.A[i-1][j-1]*self.x[j]
                     for j in self.V)>=1 for i in self.V)
-        #Constraint 2a
+        #Constraint 1.12a
         self.model.add_constraint(self.model.sum(self.y[self.v+2,i] for i in self.V)==1)
-        #Constraint 2b
+        #Constraint 1.12b
         self.model.add_constraints(self.model.sum(self.y[i,j] for i in self.U if (i,j) in self.Y)
                     ==1 for j in self.V)
-        #Constraint 2c
+        #Constraint 1.12c
         self.model.add_constraints(self.y[self.v+1,i]+self.y[i,j]<=1 for i,j in self.EE)
-        #Constraint 2d
+        #Constraint 1.12d
         self.model.add_constraints((self.v+1)*self.y[i,j]+self.u[i]-self.u[j]+(self.v-1)*self.y[j,i]
                     <=self.v for i,j in self.EE)
-        #Constraint 2e
+        #Constraint 1.12e
         self.model.add_constraints((self.v+1)*self.y[i,j]+self.u[i]-self.u[j]<=self.v for i,j in self.YY)
-        #Constraint 2f
+        #Constraint 1.12f
         self.model.add_constraint(self.y[self.v+1,self.v+2]==1)
-        #Constraint 2g
+        #Constraint 1.12g
         self.model.add_constraint(self.u[self.v+1]==0)
-        #Constraint 2i
+        #Constraint 1.12i
         self.model.add_constraints(1<=self.u[i] for i in self.VV)
         self.model.add_constraints(self.u[i]<=self.v+1 for i in self.VV)
-        #Constraint 2i
+        #Constraint 1.12i
         self.model.add_constraints(self.x[i]==1-self.y[self.v+1,i] for i in self.V)
 
 
@@ -76,8 +76,7 @@ class Miller_Tucker_Zemlin_Model:
         if res == None:
             print('infeasible')
             return
-        #self.model.print_information()
-        print(self.model.objective_value)
+        #print(self.model.objective_value)
 
         elapsed = int(round(end-start))
         self.write_info(elapsed, res)

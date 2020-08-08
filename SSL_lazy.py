@@ -30,11 +30,8 @@ class DOLazyCallback(ConstraintCallbackMixin, LazyConstraintCallback):
     @print_called('--> lazy constraint callback called: #{0}')
     def __call__(self):
         # fetch variable values into a solution
-        #sol = self.make_solution()
         sol_x = self.make_solution_from_vars(self.x.values())
         sol_y = self.make_solution_from_vars(self.y.values())
-        #print(sol_y)
-        #print(sol_x)
 
         self.active_vertices = [i for i in self.V if sol_x['x_'+str(i)]>0.9]
         self.active_edges = [(i,j) for i,j in self.E if sol_y['y_'+str(i)+"_"+str(j)]>0.9]
@@ -47,14 +44,15 @@ class DOLazyCallback(ConstraintCallbackMixin, LazyConstraintCallback):
                     graph[i].append(k)
                 elif i==k:
                     graph[i].append(j)
+
         connected = np.zeros(len(self.active_vertices))
         i = self.active_vertices[0]
         connected[0] = 1
-        #print("DEBUG", self.active_vertices, self.active_edges)
         for j in range(1,len(self.active_vertices)):
             #If exist a path from i to j
             if exist_path(graph, i, self.active_vertices[j]):
                 connected[j] = 1
+
         #if connected, return True, optimal solution found
         if connected.all():
             return
@@ -76,14 +74,6 @@ class DOLazyCallback(ConstraintCallbackMixin, LazyConstraintCallback):
                 self.register_constraints(self.model.sum(self.y[i,k] for (i,k) in self.active_edges
                 if i in cycle and k in cycle)<=self.model.sum(self.x[i] for i in cycle if i!=j)
                 for j in cycle)
-        #print(self.cts)
-        #unsats = self.get_cpx_unsatisfied_cts(self.cts, sol, tolerance=0.05)
-        #for ct, cpx_lhs, sense, cpx_rhs in unsats:
-            #print('Add violated subtour')
-            #self.nb_lazy_cts += 1
-            #print('  -- new lazy constraint[{0}]'.format(self.nb_lazy_cts))
-            #self.add(cpx_lhs, sense, cpx_rhs)
-        #print('  -- new lazy constraint[{0}]'.format(self.nb_lazy_cts))
 
         for ct in self.cts:
             cpx_lhs, cpx_sense, cpx_rhs = self.linear_ct_to_cplex(ct)
@@ -107,22 +97,22 @@ class Simonetti_SallesDaCunha_Lucena_Model_Lazy:
 
     def _build_model(self):
         self.model.minimize(self.model.sum(self.x[i] for i in self.V))
-        # Constraints 1.5
+        # Constraints 1.3a
         self.model.add_constraint(self.model.sum(self.y)==self.model.sum(self.x)-1)
-        # Constraints 1.8
+        # Constraints 1.3d
         self.model.add_constraints(self.y[i,j]>=0 for i,j in self.E)
 
-        # Constraints 1.9
+        # Constraints 1.3e
         self.model.add_constraints(self.x[i]<=1 for i in self.V)
         self.model.add_constraints(self.x[i]>=0 for i in self.V)
 
-        # Constraints 1.10
+        # Constraints 1.4a
         for v in self.V:
             self.model.add_constraint(self.model.sum(self.x[k] for k in self.gamma_i[v])-
                     self.model.sum(self.y[i,j] for i,j in self.E if i in self.gamma_i[v]
                     and j in self.gamma_i[v])>=1)
 
-        # Constraints on edges
+        # Constraints 1.3f
         self.model.add_constraints(self.y[i,j]<=self.x[i] for i,j in self.E)
         self.model.add_constraints(self.y[i,j]<=self.x[j] for i,j in self.E)
 
@@ -148,8 +138,7 @@ class Simonetti_SallesDaCunha_Lucena_Model_Lazy:
         end =  time()*1000
         if res == None:
             return
-        #self.model.print_information()
-        print(self.model.objective_value)
+        #print(self.model.objective_value)
         elapsed = int(round(end-start))
 
         self.write_info(elapsed, res)
