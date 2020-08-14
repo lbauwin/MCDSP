@@ -150,7 +150,7 @@ class Simonetti_SallesDaCunha_Lucena_Model_Lazy:
 
     def write_info(self, time, res):
         density = int(len(self.E)*2/(len(self.V)*len(self.V)-1)*100)
-        filename = "../results/SSL_lazy_"+str(len(self.V))+"_"+str(density)+".csv"
+        filename = "results/SSL_lazy_"+str(len(self.V))+"_"+str(density)+".csv"
         with open(filename, 'a') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['SSL_L', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])

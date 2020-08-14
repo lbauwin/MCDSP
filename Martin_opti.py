@@ -24,7 +24,7 @@ import csv
 
 # In[73]:
 M = 1
-class Martin_Model:
+class Martin_opti_Model:
     def __init__(self, V,E,A, status=True):
         self.V = V
         self.E = E
@@ -46,28 +46,23 @@ class Martin_Model:
         self.model.minimize(self.model.sum(self.x[i] for i in self.V))
         self.model.add_constraints(self.model.sum(self.A[i-1][j-1]*self.x[j]
                                 for j in self.V)>=1 for i in self.V)
-        #Constraint 3a
+        #Constraint 1.6a
         self.model.add_constraint(self.model.sum(self.y[i,j] for i,j in self.E)
                                 == self.model.sum(self.x[i] for i in self.V)-1)
-        #Constraint 3b
+        #Constraint 1.6b
         self.model.add_constraints(self.y[i,j]<=self.x[i] for i,j in self.E)
         self.model.add_constraints(self.y[i,j]<=self.x[j] for i,j in self.E)
-        #Constraint 3c
-        self.model.add_constraints(self.z[i,j,k]<=self.y[i,j] for i,j in self.E for k in self.V)
-        self.model.add_constraints(self.z[i,j,k]<=self.x[k] for i,j in self.E for k in self.V)
-        #Constraint 3d
-        self.model.add_constraints(self.z[j,i,k]<=self.y[i,j] for i,j in self.E for k in self.V)
-        self.model.add_constraints(self.z[j,i,k]<=self.x[k] for i,j in self.E for k in self.V)
-        #Constraint 3e
-        self.model.add_constraints(self.y[i,j]-M*(3-self.x[i]-self.x[j]-self.x[k])
+        #Constraint 1.8a
+        self.model.add_constraints(self.z[i,j,k]+self.z[j,i,k]<=self.y[i,j] for i,j in self.E for k in self.V)
+        #Constraint 1.8b
+        self.model.add_constraints(self.z[i,j,k]+self.z[j,i,k]<=self.x[k] for i,j in self.E for k in self.V)
+        #Constraint 1.9a
+        self.model.add_constraints(self.y[i,j]+self.x[i]+self.x[j]+self.x[k]-3
                     <=self.z[i,j,k]+self.z[j,i,k] for i in self.V for j in self.V for k in self.V)
-        self.model.add_constraints(self.z[i,j,k]+self.z[j,i,k] <= self.y[i,j]+
-                    M*(3-self.x[i]-self.x[j]-self.x[k])  for i in self.V
-                    for j in self.V for k in self.V )
-        #Constraint 3f
-        self.model.add_constraints(1-M*(2-self.x[i]-self.x[j])<=self.model.sum(self.z[i,k,j]
+        #Constraint 1.9b
+        self.model.add_constraints(self.x[i]+self.x[j]-1<=self.model.sum(self.z[i,k,j]
                     for k in self.V if k!=i and k!=j)+self.y[i,j] for i in self.V for j in self.V )
-        self.model.add_constraints(1+M*(2-self.x[i]-self.x[j])>=self.model.sum(self.z[i,k,j]
+        self.model.add_constraints(3-self.x[i]-self.x[j]>=self.model.sum(self.z[i,k,j]
                     for k in self.V if k!=i and k!=j)+self.y[i,j] for i in self.V for j in self.V )
         #Constraint 3g
         self.model.add_constraints(self.y[i,j]==0 for i in self.V for j in self.V
@@ -82,6 +77,7 @@ class Martin_Model:
         start = time()*1000
         res = self.model.solve(clean_before_solve=True, log_output=self.status)
         end = time()*1000
+        print(self.model.objective_value)
         elapsed = int(round(end-start))
         self.write_info(elapsed, res)
         active_vertices = [i for i in self.V if self.x[i].solution_value>0.9]
@@ -89,15 +85,15 @@ class Martin_Model:
         return res, active_vertices, active_edges
     def write_info(self, time, res):
         density = int(len(self.E)*2/(len(self.V)*len(self.V)-1)*100)
-        filename = "results/Martin_"+str(len(self.V))+"_"+str(density)+".csv"
+        filename = "results/Martin_opti_"+str(len(self.V))+"_"+str(density)+".csv"
         with open(filename, 'a') as csvfile:
             writer = csv.writer(csvfile)
-            writer.writerow(['Martin', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
+            writer.writerow(['Martin opti', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
         csvfile.close()
 
 
-def Martin(V,E,A, status=True):
-    instance = Martin_Model(V,E,A,status)
+def Martin_opti(V,E,A, status=True):
+    instance = Martin_opti_Model(V,E,A,status)
     instance._build_model()
     try:
         return instance.solve_model()

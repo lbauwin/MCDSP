@@ -78,10 +78,10 @@ class Single_Commodity_Flow_Model:
         active_vertices = [i for i in self.V if self.x[i].solution_value>0.9]
         active_edges = [(i,j) for i,j in self.E if self.f[i,j].solution_value>0.9 or self.f[j,i].solution_value>0.9]
         return res, active_vertices, active_edges
-        
+
     def write_info(self, time, res):
         density = int(len(self.E)*2/(len(self.V)*len(self.V)-1)*100)
-        filename = "../results/SCF_"+str(len(self.V))+"_"+str(density)+".csv"
+        filename = "results/SCF_"+str(len(self.V))+"_"+str(density)+".csv"
         with open(filename, 'a') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['SCF', len(self.V), len(self.E), time, self.model.objective_value, self.model.number_of_variables, self.model.number_of_constraints ])
