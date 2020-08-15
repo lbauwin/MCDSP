@@ -7,6 +7,7 @@ from MDS import *
 from SSL import *
 from SSL_lazy import *
 from Martin import *
+from Martin_opti import *
 from MTZ import *
 from SCF import *
 import sys
@@ -126,7 +127,7 @@ def main():
     #f = open(filename, 'a')
     #sys.stdout = f
     # start solver
-    status = True
+    status = False
     #MDS(V,E,A, status)
     print("\n\nSolving MTZ...")
     Miller_Tucker_Zemlin(V,E,A, status)
@@ -138,6 +139,7 @@ def main():
     Single_Commodity_Flow(V,E,A, status)
     print("\n\nSolving Martin...")
     Martin(V,E,A, status)
+    Martin_opti(V,E,A,status)
     #print("\n\n----------------------------------------------------\n\n")
     #sys.stdout = orig_stdout
     #f.close()

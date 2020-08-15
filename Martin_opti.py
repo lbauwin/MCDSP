@@ -62,9 +62,7 @@ class Martin_opti_Model:
         #Constraint 1.9b
         self.model.add_constraints(self.x[i]+self.x[j]-1<=self.model.sum(self.z[i,k,j]
                     for k in self.V if k!=i and k!=j)+self.y[i,j] for i in self.V for j in self.V )
-        self.model.add_constraints(3-self.x[i]-self.x[j]>=self.model.sum(self.z[i,k,j]
-                    for k in self.V if k!=i and k!=j)+self.y[i,j] for i in self.V for j in self.V )
-        #Constraint 3g
+        #Constraint 1.6g
         self.model.add_constraints(self.y[i,j]==0 for i in self.V for j in self.V
                                 if (i,j) not in self.E and (j,i) not in self.E)
         self.model.add_constraints(self.z[i,j,k]==0 for i in self.V for j in self.V
